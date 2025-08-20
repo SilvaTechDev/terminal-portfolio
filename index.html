@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sylivanus Momanyi • Terminal Portfolio</title>
+  <style>
+    :root{
+      --bg:#0b0f14;--panel:#0f1620;--panel-2:#111826;--accent:#00ffb2;--accent-soft:rgba(0,255,178,0.18);--text:#ccf8ee;--muted:#7ee5cc;--error:#ff6166;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:"Fira Code",ui-monospace,Menlo,Consolas,monospace; background: radial-gradient(circle at 20% -10%, #122033, transparent 30%), radial-gradient(circle at 110% 10%, #0e1a28, transparent 35%), var(--bg); color:var(--text);
+      display:flex; align-items:center; justify-content:center; padding:18px;
+    }
+    .wrap{ width:min(1000px,95vw); }
+
+    /* Status bar */
+    .status{
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      background:linear-gradient(180deg, var(--panel), var(--panel-2));
+      border:1px solid var(--accent-soft); border-radius:12px 12px 0 0; padding:8px 14px; box-shadow:0 8px 30px var(--accent-soft);
+      position:relative;
+    }
+    .dots{ display:flex; gap:8px; align-items:center }
+    .dot{ width:12px; height:12px; border-radius:50% }
+    .d-red{ background:#ff5f56 } .d-yellow{ background:#ffbd2e } .d-green{ background:#27c93f }
+    .sys{ font-size:12px; color:var(--muted) }
+
+    /* Terminal */
+    .terminal{ height:68vh; background:linear-gradient(180deg, var(--panel-2), var(--panel)); border:1px solid var(--accent-soft); border-top:none; border-radius:0 0 12px 12px; overflow:auto; padding:16px; box-shadow:0 12px 40px var(--accent-soft) inset; }
+    .line{ margin:6px 0; }
+    .prompt{ color:var(--accent) }
+    .cmd{ color:#a0fce8 }
+    .output{ white-space:pre-wrap }
+    .error{ color:var(--error) }
+
+    /* Input bar */
+    .input-bar{ display:flex; gap:8px; align-items:center; background:rgba(0,0,0,0.25); border:1px solid var(--accent-soft); border-radius:10px; margin-top:10px; padding:10px 12px }
+    #command{ flex:1; background:transparent; border:none; outline:none; color:var(--text); font:inherit }
+    .cursor{ width:8px; height:1.2em; background:var(--accent); animation:blink 1s steps(2,end) infinite }
+    @keyframes blink{ 50%{ opacity:0 } }
+
+    /* 3D Card (hidden until command) */
+    .card-area{ margin-top:14px; display:none }
+    .card3d{ width:240px; height:320px; perspective:1000px; }
+    .inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition:transform .7s cubic-bezier(.2,.6,.2,1) }
+    .card3d:hover .inner{ transform:rotateY(180deg) }
+    .face{ position:absolute; inset:0; border-radius:14px; overflow:hidden; backface-visibility:hidden; box-shadow:0 14px 40px rgba(0,0,0,.35), 0 0 0 1px var(--accent-soft) inset }
+    .face img{ width:100%; height:100%; object-fit:cover }
+    .back{ display:flex; flex-direction:column; align-items:center; justify-content:center; padding:14px; gap:6px; background:linear-gradient(180deg, #0e1522, #0b121d); transform:rotateY(180deg) }
+    .badge{ font-size:12px; color:var(--muted); background:rgba(0,255,178,.08); border:1px solid var(--accent-soft); padding:4px 8px; border-radius:999px }
+    .name{ font-weight:700; letter-spacing:.3px }
+
+    /* Helpers */
+    code{ color:#a5ffe6 }
+    .kbd{ display:inline-block; border:1px solid var(--accent-soft); padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.03); color:var(--muted); font-size:12px }
+    @media (max-width:640px){ .terminal{ height:62vh } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="status">
+      <div class="dots">
+        <span class="dot d-red"></span>
+        <span class="dot d-yellow"></span>
+        <span class="dot d-green"></span>
+      </div>
+      <div class="sys" id="sysinfo">Detecting system…</div>
+    </div>
+
+    <div id="terminal" class="terminal" aria-live="polite">
+      <div class="line">Welcome to <b>Sylivanus Momanyi</b>'s interactive portfolio. Type <code>help</code> or <code>ls</code> to begin.</div>
+      <div class="line">Tips: Use <span class="kbd">↑</span>/<span class="kbd">↓</span> for history, <span class="kbd">Tab</span> for auto-complete.</div>
+    </div>
+
+    <div class="input-bar">
+      <span class="prompt">visitor@sylivanus:~$</span>
+      <input id="command" type="text" spellcheck="false" autocomplete="off" autofocus />
+      <span class="cursor" aria-hidden="true"></span>
+    </div>
+
+    <div id="cardArea" class="card-area">
+      <div class="card3d">
+        <div class="inner">
+          <div class="face front"><img src="https://files.catbox.moe/q9mt4m.jpeg" alt="Sylivanus portrait" /></div>
+          <div class="face back">
+            <span class="badge">Syliva Tech Inc</span>
+            <div class="name">Sylivanus Momanyi</div>
+            <div>Developer • Educator (MMUST)</div>
+            <div>Focus: Web, Bots, Automation, Security</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const term = document.getElementById('terminal');
+    const input = document.getElementById('command');
+    const sysinfo = document.getElementById('sysinfo');
+    const cardArea = document.getElementById('cardArea');
+
+    // Live system info (Local time + IP)
+    (async function initSystemInfo(){
+      let ip = '…';
+      try{ const r = await fetch('https://api64.ipify.org?format=json'); const j = await r.json(); ip = j.ip; }catch(e){ ip = 'IP unavailable'; }
+      function tick(){ sysinfo.textContent = `Local Time: ${new Date().toLocaleString()}  |  IP: ${ip}`; }
+      tick(); setInterval(tick, 1000);
+    })();
+
+    // Utilities
+    const write = (html, cls='output') => {
+      const div = document.createElement('div');
+      div.className = `line ${cls}`; div.innerHTML = html; term.appendChild(div); term.scrollTop = term.scrollHeight;
+    };
+    const writeCmd = (cmd) => write(`<span class="prompt">visitor@sylivanus:~$</span> <span class="cmd">${cmd}</span>`);
+
+    // Typing effect for nicer UX
+    function typeOut(text, speed=12){
+      return new Promise(resolve=>{ let i=0; const out=document.createElement('div'); out.className='line output'; term.appendChild(out);
+        const id=setInterval(()=>{ out.textContent = text.slice(0, ++i); term.scrollTop = term.scrollHeight; if(i>=text.length){ clearInterval(id); resolve(); } }, speed);
+      });
+    }
+
+    // Data — pulled from our history (sans girlfriend content)
+    const data = {
+      about: `Hi, I'm Sylivanus Momanyi (b. Feb 11, 2003) — a developer & educator based in Kenya. I study Bachelor of Education Arts (English & Literature) at MMUST and build modern web apps, WhatsApp bots, and automation tools under Silva Tech Inc. I love clean design, secure systems, and shipping fast.`,
+      education: `Education\n- Itibo Boys Primary (Class 4–8) — 332/400\n- Kericho High School — Mean grade C-\n- Riambase DEB Secondary (Form 4, 2022) — B-\n- Masinde Muliro University of Science and Technology (MMUST) — B.Ed Arts (English & Literature)` ,
+      experience: `Experience\n- Founder, Silva Tech Inc (2024–Present) — Building modern bots, dashboards, and web services.\n- Creator, Silva MD Bot — AI-powered WhatsApp bot framework using Baileys.\n- Creator, SilvaHost — Lightweight hosting/automation platform with plans & auth.\n- Organizer, SilvaTech Expo 2025 @ KICC Nairobi — innovation, security, hackathons.`,
+      skills: `Skills\n- Languages: JavaScript/TypeScript, Node.js, HTML/CSS\n- Backend: Express, REST APIs, Firebase Auth + Firestore, Supabase (SQL + Edge Functions)\n- Bots/Realtime: Baileys (WhatsApp), WebSockets, Rate limiting, CORS, Helmet\n- DevOps: Docker, Git, CI, Vercel/Netlify deployments\n- Extras: Network security, incident response basics, UI/UX for dashboards`,
+      projects: `Projects\n- Silva MD Bot — modern WhatsApp bot; menu system, SafeSend, plugins, groups/DM.\n- SilvaHost — subscription/coins plans, GitHub app.json parsing, Heroku deploy hooks.\n- Silva EduTech Nexus — learning tools & automation.\n- SilvaWave — multipurpose WhatsApp bot (in progress).\n- Silva Mediait — Node.js downloader using yt-dlp wrapper with /api/info and /api/download.\n- WiFi Hotspot Manager — pricing display, auth, billing, notifications.\n- Supabase + Firebase redundancy — SQL migrations & Edge functions (auto-progress-years, email notifiers).`,
+      contact: `Contact\n- Email: <add-your-email>@example.com\n- GitHub: <your-github>\n- Website: coming soon\n(Pro tip: replace placeholders in the code.)`
+    };
+
+    // Commands & Aliases
+    const commands = {
+      help(){ return `Commands\n- help, ls — list commands\n- about — who I am\n- education | edu — schools & grades\n- experience | exp — roles & highlights\n- skills — stack & tools\n- projects | proj — featured builds\n- contact — how to reach me\n- card — show profile card\n- hidecard — hide profile card\n- clear — clear the terminal`; },
+      ls(){ return commands.help(); },
+      about(){ return data.about; },
+      education(){ return data.education; },
+      edu(){ return data.education; },
+      experience(){ return data.experience; },
+      exp(){ return data.experience; },
+      skills(){ return data.skills; },
+      projects(){ return data.projects; },
+      proj(){ return data.projects; },
+      contact(){ return data.contact; },
+      card(){ cardArea.style.display = 'block'; return 'Profile card opened. Hover to flip.'; },
+      hidecard(){ cardArea.style.display = 'none'; return 'Profile card hidden.'; },
+      clear(){ term.innerHTML=''; return ''; }
+    };
+
+    // History + autocomplete
+    const history=[]; let hIdx=0;
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){
+        const cmd = input.value.trim(); if(!cmd) return; history.push(cmd); hIdx = history.length; writeCmd(cmd);
+        const fn = commands[cmd];
+        if(fn){ const out = fn(); if(out) typeOut(out); }
+        else typeOut(`Command not found: ${cmd}. Type 'help'.`).then(()=>{});
+        input.value='';
+      } else if(e.key==='ArrowUp'){
+        if(hIdx>0){ hIdx--; input.value = history[hIdx] || ''; }
+        e.preventDefault();
+      } else if(e.key==='ArrowDown'){
+        if(hIdx < history.length){ hIdx++; input.value = history[hIdx] || ''; }
+        e.preventDefault();
+      } else if(e.key==='Tab'){
+        e.preventDefault();
+        const cur = input.value.trim(); if(!cur) return;
+        const pool = Object.keys(commands);
+        const matches = pool.filter(c=>c.startsWith(cur));
+        if(matches.length===1) input.value = matches[0];
+        else if(matches.length>1) write(`Suggestions: ${matches.join(', ')}`);
+      }
+    });
+
+    // MOTD
+    (async function motd(){
+      await typeOut("Initializing environment… done.");
+      await typeOut("Fetching system info… done.");
+      await typeOut("Type 'help' to explore.\n");
+    })();
+  </script>
+</body>
+</html>
