@@ -48,7 +48,7 @@
       z-index: -1;
     }
 
-    /* Main container with glassmorphism effect */
+    /* Main container with responsive width */
     .container {
       width: 100%;
       max-width: 1200px;
@@ -58,7 +58,7 @@
       backdrop-filter: blur(10px);
     }
 
-    /* Terminal window with glassmorphism */
+    /* Terminal window with responsive behavior */
     .terminal-window {
       background: var(--panel);
       border-radius: 20px;
@@ -394,49 +394,6 @@
       border-radius: 4px;
     }
 
-    /* Responsive design */
-    @media (max-width: 968px) {
-      .container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-      
-      .sidebar {
-        order: -1;
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-      
-      .profile-card, .quick-commands {
-        flex: 1;
-        min-width: 300px;
-      }
-      
-      .terminal-window {
-        height: 65vh;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .sidebar {
-        flex-direction: column;
-      }
-      
-      .terminal-window {
-        height: 60vh;
-      }
-      
-      .status-bar {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-      }
-      
-      .profile-card, .quick-commands {
-        min-width: 100%;
-      }
-    }
-
     /* Theme toggle */
     .theme-toggle {
       position: fixed;
@@ -458,6 +415,153 @@
     .theme-toggle i {
       font-size: 1.2rem;
       color: var(--accent);
+    }
+
+    /* Responsive design - Fixed width issues */
+    /* For tablets and smaller laptops */
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+        max-width: 90%;
+        gap: 20px;
+      }
+      
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .profile-card, .quick-commands {
+        flex: 1;
+        min-width: 300px;
+        max-width: 400px;
+      }
+      
+      .terminal-window {
+        height: 65vh;
+      }
+    }
+
+    /* For tablets in portrait mode */
+    @media (max-width: 768px) {
+      .container {
+        max-width: 95%;
+      }
+      
+      .sidebar {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .profile-card, .quick-commands {
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      .terminal-window {
+        height: 60vh;
+      }
+      
+      .status-bar {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+    }
+
+    /* For smartphones */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      
+      .container {
+        width: 100%;
+        max-width: 100%;
+        gap: 16px;
+      }
+      
+      .terminal-window {
+        height: 55vh;
+        border-radius: 16px;
+      }
+      
+      .profile-card, .quick-commands {
+        border-radius: 16px;
+        padding: 18px;
+      }
+      
+      .profile-img {
+        width: 80px;
+        height: 80px;
+      }
+      
+      .profile-name {
+        font-size: 1.3rem;
+      }
+      
+      .input-area {
+        padding: 12px 16px;
+      }
+      
+      #command-input {
+        font-size: 14px;
+      }
+      
+      .theme-toggle {
+        width: 40px;
+        height: 40px;
+        top: 15px;
+        right: 15px;
+      }
+      
+      .theme-toggle i {
+        font-size: 1rem;
+      }
+      
+      .terminal-content {
+        padding: 16px;
+      }
+      
+      .line {
+        margin: 8px 0;
+        font-size: 14px;
+      }
+      
+      .command-chips {
+        justify-content: center;
+      }
+      
+      .command-chip {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+    }
+
+    /* For very small smartphones */
+    @media (max-width: 360px) {
+      .profile-card, .quick-commands {
+        min-width: 100%;
+      }
+      
+      .terminal-window {
+        height: 50vh;
+      }
+      
+      .profile-details div {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      
+      .social-links {
+        gap: 12px;
+      }
+      
+      .social-links a {
+        font-size: 1.1rem;
+      }
     }
   </style>
 </head>
